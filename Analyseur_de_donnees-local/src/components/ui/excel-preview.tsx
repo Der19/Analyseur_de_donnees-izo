@@ -244,7 +244,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
             }
             // Appliquer ordre priorisant les colonnes binned
             try {
-              const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+              const binned = JSON.parse(localStorage.getItem(`binnedColumns:${data.filename}`) || '[]')
               if (Array.isArray(binned) && binned.length) {
                 const setB = new Set(binned)
                 restored.columns = [
@@ -343,10 +343,10 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
 
       // Marquer les colonnes binned (stockage local depuis la page de prétraitement)
       try {
-        const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+        const binned = JSON.parse(localStorage.getItem(`binnedColumns:${data.filename}`) || '[]')
         if (Array.isArray(binned) && binned.length) {
           // Réordonner pour afficher les colonnes binned en premier dans les listes
-          const cols = Array.from(new Set([...(data.columns || []), ...binned]))
+          const cols = [...(data.columns || [])]
           const binnedSet = new Set(binned)
           const prioritized = [...cols.filter(c => binnedSet.has(c)), ...cols.filter(c => !binnedSet.has(c))]
           data.columns = prioritized

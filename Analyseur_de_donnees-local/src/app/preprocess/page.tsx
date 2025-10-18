@@ -120,10 +120,10 @@ export default function PreprocessPage() {
       // Mettre à jour les listes locales (binnedColumns + columns) en tenant compte des suppressions et créations
       try {
         const delSet = new Set(Object.values(toDelete).flat())
-        const existingB = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+        const existingB = JSON.parse(localStorage.getItem(`binnedColumns:${filename}`) || '[]')
         const baseB = Array.isArray(existingB) ? existingB.filter((c: string) => !delSet.has(c)) : []
         const mergedB = Array.from(new Set([...(baseB || []), ...created]))
-        localStorage.setItem('binnedColumns', JSON.stringify(mergedB))
+        localStorage.setItem(`binnedColumns:${filename}`, JSON.stringify(mergedB))
       } catch {}
 
       try {
