@@ -857,7 +857,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
                   <div className="text-green-600">Colonnes</div>
                 </div>
                 <div className="text-center p-0.5 bg-purple-50 rounded text-xs">
-                  <div className="font-bold text-purple-600">{(file.size / 1024).toFixed(1)} KB</div>
+                  <div className="font-bold text-purple-600">{file ? (file.size / 1024).toFixed(1) + ' KB' : (previewData ? `${previewData.rows} lignes` : '')}</div>
                   <div className="text-purple-600">Taille</div>
                 </div>
               </div>
@@ -1084,7 +1084,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
                   <div className="text-blue-600">Colonnes</div>
                 </div>
                 <div className="text-center p-0.5 bg-purple-50 rounded text-xs">
-                  <div className="font-bold text-purple-600">{(file.size / 1024).toFixed(1)} KB</div>
+                  <div className="font-bold text-purple-600">{file ? (file.size / 1024).toFixed(1) + ' KB' : (previewData ? `${previewData.rows} lignes` : '')}</div>
                   <div className="text-purple-600">Taille</div>
             </div>
           </div>
@@ -1226,7 +1226,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
                   <div className="text-yellow-600">Colonnes</div>
                 </div>
                 <div className="text-center p-0.5 bg-purple-50 rounded text-xs">
-                  <div className="font-bold text-purple-600">{(file.size / 1024).toFixed(1)} KB</div>
+                  <div className="font-bold text-purple-600">{file ? (file.size / 1024).toFixed(1) + ' KB' : (previewData ? `${previewData.rows} lignes` : '')}</div>
                   <div className="text-purple-600">Taille</div>
                 </div>
               </div>
