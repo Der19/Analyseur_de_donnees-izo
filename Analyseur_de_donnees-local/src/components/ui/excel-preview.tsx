@@ -1041,7 +1041,24 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
             
 
             
-            <div className="mt-6 pt-4 border-t">
+            <div className="mt-6 pt-4 border-t flex items-center justify-between">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Forcer le passage par preprocess à nouveau
+                  try {
+                    const stored = localStorage.getItem('excelAnalysisData')
+                    if (stored) {
+                      const d = JSON.parse(stored)
+                      if (d?.filename) localStorage.removeItem(`preprocessDone:${d.filename}`)
+                    }
+                  } catch {}
+                  window.location.href = '/preprocess'
+                }}
+                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              >
+                Modifier les intervalles
+              </Button>
               <Button 
                 onClick={handleSubmit}
                 disabled={isSubmitting}

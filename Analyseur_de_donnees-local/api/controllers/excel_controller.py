@@ -165,6 +165,22 @@ async def bin_variable(filename: str, source_column: str, bin_size: float, new_c
         "bins": unique_bins,
     }
 
+async def drop_columns(filename: str, columns: List[str]):
+    """Supprime des colonnes du DataFrame si elles existent."""
+    if filename not in uploaded_files:
+        return {"error": "Fichier non trouvé. Faites d'abord /excel/preview."}
+    df = uploaded_files[filename]
+    removed = []
+    for col in columns:
+        if col in df.columns:
+            try:
+                del df[col]
+                removed.append(str(col))
+            except Exception:
+                pass
+    uploaded_files[filename] = df
+    return {"filename": str(filename), "removed": removed}
+
 async def select_columns(filename: str, variables_explicatives: List[str], variable_a_expliquer: List[str], selected_data: Dict = None):
     if filename not in uploaded_files:
         return {"error": "Fichier non trouvé. Faites d'abord /excel/preview."}

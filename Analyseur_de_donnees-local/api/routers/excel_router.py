@@ -63,6 +63,17 @@ async def bin_variable(
 ):
     return await excel_controller.bin_variable(filename, source_column, bin_size, new_column_name)
 
+@router.post("/drop-columns")
+async def drop_columns(
+    filename: str = Form(...),
+    columns: str = Form(...),  # CSV
+):
+    try:
+        cols = [c.strip() for c in columns.split(',') if c.strip()]
+    except Exception:
+        cols = []
+    return await excel_controller.drop_columns(filename, cols)
+
 @router.post("/build-decision-tree")
 async def build_decision_tree_endpoint(
     filename: str = Form(...),

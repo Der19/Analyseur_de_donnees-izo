@@ -22,6 +22,8 @@ export default function PreprocessPage() {
   const [binSizes, setBinSizes] = useState<Record<string, string>>({})
   const [newNames, setNewNames] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<Record<string, boolean>>({})
+  const [existingBinned, setExistingBinned] = useState<Record<string, string[]>>({})
+  const [toDelete, setToDelete] = useState<Record<string, string[]>>({})
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -53,6 +55,20 @@ export default function PreprocessPage() {
       const defaultsSel: Record<string, boolean> = {}
       parsedCols.forEach((c: ConcernedColumn) => (defaultsSel[c.column] = false))
       setSelected(defaultsSel)
+      // Détecter les colonnes binned existantes par variable (côté client)
+      try {
+        const ea = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
+        const cols: string[] = Array.isArray(ea?.columns) ? ea.columns : []
+        const mapped: Record<string, string[]> = {}
+        parsedCols.forEach((c: ConcernedColumn) => {
+          const pref = `${c.column}_bin`
+          mapped[c.column] = cols.filter((col: string) => col.startsWith(pref))
+        })
+        setExistingBinned(mapped)
+        const initDel: Record<string, string[]> = {}
+        Object.keys(mapped).forEach(k => initDel[k] = [])
+        setToDelete(initDel)
+      } catch {}
     } catch {
       router.push('/variables')
     }
@@ -84,6 +100,16 @@ export default function PreprocessPage() {
           if (j?.new_column) created.push(j.new_column)
         } catch {}
       }
+      // Suppression des anciennes colonnes sélectionnées pour suppression
+      try {
+        const delList = Object.values(toDelete).flat()
+        if (delList.length) {
+          const f = new FormData()
+          f.append('filename', filename)
+          f.append('columns', delList.join(','))
+          await fetch(`${API_URL}/excel/drop-columns`, { method: 'POST', body: f })
+        }
+      } catch {}
       // Marquer le fichier comme pré-traité et poursuivre le flux normal
       localStorage.removeItem('preprocessColumns')
       try {
@@ -99,7 +125,9 @@ export default function PreprocessPage() {
           // Mettre à jour la liste des colonnes connue côté client pour l'écran suivant
           const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
           if (existingEA && Array.isArray(existingEA.columns)) {
-            const updatedCols = Array.from(new Set([...(existingEA.columns || []), ...created]))
+            const delSet = new Set(Object.values(toDelete).flat())
+            const base = (existingEA.columns || []).filter((c: string) => !delSet.has(c))
+            const updatedCols = Array.from(new Set([...(base || []), ...created]))
             existingEA.columns = updatedCols
             localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
           }
@@ -108,7 +136,9 @@ export default function PreprocessPage() {
           try {
             const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
             if (existingEA && Array.isArray(existingEA.columns)) {
-              const updatedCols = Array.from(new Set([...(existingEA.columns || []), ...created]))
+              const delSet = new Set(Object.values(toDelete).flat())
+              const base = (existingEA.columns || []).filter((c: string) => !delSet.has(c))
+              const updatedCols = Array.from(new Set([...(base || []), ...created]))
               existingEA.columns = updatedCols
               localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
             }
@@ -185,7 +215,32 @@ export default function PreprocessPage() {
                         disabled={!selected[c.column]}
                       />
                     </div>
+                </div>
+                {existingBinned[c.column] && existingBinned[c.column].length > 0 && (
+                  <div className="mt-3 border-t pt-3">
+                    <div className="text-sm font-medium mb-2">Nettoyer les anciennes colonnes à intervalles</div>
+                    <div className="flex flex-wrap gap-3">
+                      {existingBinned[c.column].map((bn) => {
+                        const checked = (toDelete[c.column] || []).includes(bn)
+                        return (
+                          <label key={bn} className={`text-xs px-2 py-1 rounded-full border ${checked ? 'bg-red-50 border-red-300 text-red-700' : 'bg-gray-50 border-gray-200 text-gray-700'}`}>
+                            <input
+                              type="checkbox"
+                              className="mr-1 align-middle"
+                              checked={checked}
+                              onChange={(e) => setToDelete((p) => {
+                                const cur = new Set(p[c.column] || [])
+                                if (e.target.checked) cur.add(bn); else cur.delete(bn)
+                                return { ...p, [c.column]: Array.from(cur) }
+                              })}
+                            />
+                            {bn}
+                          </label>
+                        )
+                      })}
+                    </div>
                   </div>
+                )}
                 </div>
               ))}
             </div>
