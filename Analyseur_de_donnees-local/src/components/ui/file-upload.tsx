@@ -64,6 +64,10 @@ const { file, setFile } = useFile()
 
     const formData = new FormData()
     formData.append("file", file, file.name)
+    try {
+      // Permettre de relancer le pré-traitement pour ce fichier
+      localStorage.removeItem(`preprocessDone:${file.name}`)
+    } catch {}
     
     router.push(`/variables`)
 
