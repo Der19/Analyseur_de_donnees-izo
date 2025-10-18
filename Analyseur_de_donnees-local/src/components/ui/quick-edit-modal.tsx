@@ -233,7 +233,6 @@ export default function QuickEditModal({ editType, returnToPage, onClose }: Quic
       }
 
       const response = await fetch(`${API_URL}/excel/select-columns`, {
-        const response = await fetch(`${API_URL}/excel/select-columns`, {
         method: "POST",
         body: formData,
       })
@@ -681,7 +680,7 @@ export default function QuickEditModal({ editType, returnToPage, onClose }: Quic
                                         formData.append("filename", previewData.filename)
                                         formData.append("column_name", columnName)
 
-                                        const response = await fetch("http://localhost:8000/excel/get-column-values", {
+                                        const response = await fetch(`${API_URL}/excel/get-column-values`, {
                                           method: "POST",
                                           body: formData,
                                         })
