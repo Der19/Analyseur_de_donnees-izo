@@ -21,6 +21,7 @@ export default function PreprocessPage() {
   const [concerned, setConcerned] = useState<ConcernedColumn[]>([])
   const [binSizes, setBinSizes] = useState<Record<string, string>>({})
   const [newNames, setNewNames] = useState<Record<string, string>>({})
+  const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -48,6 +49,10 @@ export default function PreprocessPage() {
       })
       setBinSizes(defaultSizes)
       setNewNames(defaultsNames)
+      // Par défaut, aucune variable n'est sélectionnée pour éviter les créations non voulues
+      const defaultsSel: Record<string, boolean> = {}
+      parsedCols.forEach((c: ConcernedColumn) => (defaultsSel[c.column] = false))
+      setSelected(defaultsSel)
     } catch {
       router.push('/variables')
     }
@@ -61,6 +66,7 @@ export default function PreprocessPage() {
     try {
       const created: string[] = []
       for (const c of concerned) {
+        if (!selected[c.column]) continue
         const size = parseFloat(binSizes[c.column] || '0')
         if (!size || size <= 0) continue
         const form = new FormData()
@@ -143,6 +149,15 @@ export default function PreprocessPage() {
               {concerned.map((c) => (
                 <div key={c.column} className="border rounded p-4">
                   <div className="flex flex-wrap gap-4 items-end">
+                    <div className="flex items-center gap-2">
+                      <input
+                        id={`sel-${c.column}`}
+                        type="checkbox"
+                        checked={!!selected[c.column]}
+                        onChange={(e) => setSelected((p) => ({ ...p, [c.column]: e.target.checked }))}
+                      />
+                      <label htmlFor={`sel-${c.column}`} className="text-sm">Activer</label>
+                    </div>
                     <div className="flex-1 min-w-[200px]">
                       <label className="block text-sm text-gray-600">Variable</label>
                       <div className="font-medium">{c.column}</div>
@@ -157,6 +172,7 @@ export default function PreprocessPage() {
                         value={binSizes[c.column] || ''}
                         onChange={(e) => setBinSizes((p) => ({ ...p, [c.column]: e.target.value }))}
                         className="border rounded px-3 py-2 w-40"
+                        disabled={!selected[c.column]}
                       />
                     </div>
                     <div className="flex-1 min-w-[240px]">
@@ -166,6 +182,7 @@ export default function PreprocessPage() {
                         value={newNames[c.column] || ''}
                         onChange={(e) => setNewNames((p) => ({ ...p, [c.column]: e.target.value }))}
                         className="border rounded px-3 py-2 w-full"
+                        disabled={!selected[c.column]}
                       />
                     </div>
                   </div>
