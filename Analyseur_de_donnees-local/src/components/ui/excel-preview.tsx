@@ -327,7 +327,12 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
           columns: data.columns
         }
         localStorage.setItem('excelAnalysisData', JSON.stringify(minimal))
-
+        // Ne pas rediriger si déjà prétraité pour ce fichier
+        const done = localStorage.getItem(`preprocessDone:${data.filename}`)
+        if (done === 'true') {
+          return
+        }
+        
         const form = new FormData()
         form.append('filename', data.filename)
         const statsResp = await fetch(`${API_URL}/excel/column-stats`, { method: 'POST', body: form })

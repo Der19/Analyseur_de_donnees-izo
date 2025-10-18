@@ -72,6 +72,10 @@ export default function Var() {
 
       const form = new FormData()
       form.append('filename', data.filename)
+      // Ne pas rediriger si déjà prétraité pour ce fichier
+      const done = localStorage.getItem(`preprocessDone:${data.filename}`)
+      if (done === 'true') return
+
       fetch(`${API_URL}/excel/column-stats`, { method: 'POST', body: form })
         .then(r => r.ok ? r.json() : null)
         .then(res => {

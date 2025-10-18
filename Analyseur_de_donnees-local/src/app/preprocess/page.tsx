@@ -78,8 +78,13 @@ export default function PreprocessPage() {
           if (j?.new_column) created.push(j.new_column)
         } catch {}
       }
-      // Nettoyer le flag et poursuivre le flux normal
+      // Marquer le fichier comme pré-traité et poursuivre le flux normal
       localStorage.removeItem('preprocessColumns')
+      try {
+        if (filename) {
+          localStorage.setItem(`preprocessDone:${filename}`, 'true')
+        }
+      } catch {}
       if (created.length) {
         try {
           const existing = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
