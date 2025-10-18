@@ -117,34 +117,25 @@ export default function PreprocessPage() {
           localStorage.setItem(`preprocessDone:${filename}`, 'true')
         }
       } catch {}
-      if (created.length) {
-        try {
-          const existing = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
-          const merged = Array.from(new Set([...(Array.isArray(existing) ? existing : []), ...created]))
-          localStorage.setItem('binnedColumns', JSON.stringify(merged))
-          // Mettre à jour la liste des colonnes connue côté client pour l'écran suivant
-          const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
-          if (existingEA && Array.isArray(existingEA.columns)) {
-            const delSet = new Set(Object.values(toDelete).flat())
-            const base = (existingEA.columns || []).filter((c: string) => !delSet.has(c))
-            const updatedCols = Array.from(new Set([...(base || []), ...created]))
-            existingEA.columns = updatedCols
-            localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
-          }
-        } catch {
-          localStorage.setItem('binnedColumns', JSON.stringify(created))
-          try {
-            const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
-            if (existingEA && Array.isArray(existingEA.columns)) {
-              const delSet = new Set(Object.values(toDelete).flat())
-              const base = (existingEA.columns || []).filter((c: string) => !delSet.has(c))
-              const updatedCols = Array.from(new Set([...(base || []), ...created]))
-              existingEA.columns = updatedCols
-              localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
-            }
-          } catch {}
+      // Mettre à jour les listes locales (binnedColumns + columns) en tenant compte des suppressions et créations
+      try {
+        const delSet = new Set(Object.values(toDelete).flat())
+        const existingB = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+        const baseB = Array.isArray(existingB) ? existingB.filter((c: string) => !delSet.has(c)) : []
+        const mergedB = Array.from(new Set([...(baseB || []), ...created]))
+        localStorage.setItem('binnedColumns', JSON.stringify(mergedB))
+      } catch {}
+
+      try {
+        const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
+        if (existingEA && Array.isArray(existingEA.columns)) {
+          const delSet = new Set(Object.values(toDelete).flat())
+          const base = (existingEA.columns || []).filter((c: string) => !delSet.has(c))
+          const updatedCols = Array.from(new Set([...(base || []), ...created]))
+          existingEA.columns = updatedCols
+          localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
         }
-      }
+      } catch {}
       router.push('/variables')
     } catch {
       setSubmitting(false)

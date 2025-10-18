@@ -906,7 +906,13 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
                     try {
                       const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
                       if (Array.isArray(binned) && binned.length) {
-                        return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{binned.length} variable(s) à intervalles</span>
+                        // Afficher le nombre de variables sources distinctes (avant le suffixe _bin)
+                        const sources = new Set<string>()
+                        for (const col of binned) {
+                          const idx = col.indexOf('_bin')
+                          sources.add(idx > 0 ? col.substring(0, idx) : col)
+                        }
+                        return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{sources.size} variable(s) à intervalles</span>
                       }
                     } catch {}
                     return null
@@ -1041,7 +1047,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
             
 
             
-            <div className="mt-6 pt-4 border-t flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -1062,7 +1068,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
               <Button 
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full bg-green-600 hover:bg-green-700 text-lg py-3"
+                className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-lg py-3"
               >
                 {isSubmitting ? (
                   <>
