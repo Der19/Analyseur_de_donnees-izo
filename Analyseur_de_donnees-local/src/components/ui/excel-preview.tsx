@@ -418,7 +418,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
           formData.append("filename", previewData?.filename || '') // Use optional chaining
           formData.append("column_name", columnName)
 
-          const response = await fetch("http://localhost:8000/excel/get-column-values", {
+          const response = await fetch(`${API_URL}/excel/get-column-values`, {
             method: "POST",
             body: formData,
           })
