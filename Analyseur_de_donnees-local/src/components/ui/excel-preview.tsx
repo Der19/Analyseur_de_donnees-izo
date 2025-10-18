@@ -229,6 +229,42 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
     if (file && serverStatus === 'online') {
       handlePreview()
     }
+    // Si pas de fichier (retour depuis prétraitement), tenter de restaurer depuis localStorage
+    if (!file && !previewData) {
+      try {
+        const stored = localStorage.getItem('excelAnalysisData')
+        if (stored) {
+          const data = JSON.parse(stored)
+          if (data?.filename && Array.isArray(data?.columns) && typeof data?.rows === 'number') {
+            const restored: PreviewData = {
+              filename: data.filename,
+              rows: data.rows,
+              columns: data.columns,
+              preview: []
+            }
+            // Appliquer ordre priorisant les colonnes binned
+            try {
+              const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+              if (Array.isArray(binned) && binned.length) {
+                const setB = new Set(binned)
+                restored.columns = [
+                  ...restored.columns.filter(c => setB.has(c)),
+                  ...restored.columns.filter(c => !setB.has(c))
+                ]
+              }
+            } catch {}
+
+            setPreviewData(restored)
+            // Initialiser la sélection des colonnes
+            const initialSelection: ColumnSelection = {}
+            restored.columns.forEach(column => {
+              initialSelection[column] = { isExplanatory: false, isToExplain: false }
+            })
+            setColumnSelection(initialSelection)
+          }
+        }
+      } catch {}
+    }
   }, [file, serverStatus])
 
   // Mettre à jour automatiquement columnSelection.isToExplain basé sur selectedColumnValues
@@ -759,7 +795,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
     )
   }
 
-  if (!file) {
+  if (!file && !previewData) {
     return (
       <div className="text-center p-8">
         <h3 className="text-lg font-semibold mb-2">Aucun fichier sélectionné</h3>
