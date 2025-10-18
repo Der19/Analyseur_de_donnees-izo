@@ -844,7 +844,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
         <div className="fixed top-2 right-6">
           <Card className="shadow-lg w-64">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs">📁 {file.name}</CardTitle>
+              <CardTitle className="text-xs">📁 {file ? file.name : (previewData?.filename || 'Fichier')}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 pb-1">
               <div className="grid grid-cols-3 gap-0">
@@ -1071,7 +1071,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
         <div className="fixed top-2 right-6">
           <Card className="shadow-lg w-64">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs">📁 {file.name}</CardTitle>
+              <CardTitle className="text-xs">📁 {file ? file.name : (previewData?.filename || 'Fichier')}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 pb-1">
               <div className="grid grid-cols-3 gap-0">
@@ -1213,7 +1213,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
         <div className="fixed top-2 right-6">
           <Card className="shadow-lg w-64">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs">📁 {file.name}</CardTitle>
+              <CardTitle className="text-xs">📁 {file ? file.name : (previewData?.filename || 'Fichier')}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 pb-1">
               <div className="grid grid-cols-3 gap-0">
