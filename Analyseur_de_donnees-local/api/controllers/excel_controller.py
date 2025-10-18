@@ -31,6 +31,140 @@ async def preview_excel(file):
         "preview": df.head(5).to_dict(orient="records")
     }
 
+def _is_numeric_series(series: pd.Series) -> bool:
+    try:
+        return pd.api.types.is_numeric_dtype(series)
+    except Exception:
+        return False
+
+async def get_column_stats(filename: str):
+    """
+    Retourne pour chaque colonne: nom, is_numeric, unique_count, min, max.
+    """
+    if filename not in uploaded_files:
+        return {"error": "Fichier non trouvé. Faites d'abord /excel/preview."}
+
+    df = uploaded_files[filename]
+
+    stats = []
+    for col in df.columns:
+        series = df[col]
+        is_num = _is_numeric_series(series)
+        unique_count = int(series.nunique(dropna=True))
+        min_val = None
+        max_val = None
+        if is_num and unique_count > 0:
+            try:
+                min_val = float(pd.to_numeric(series, errors='coerce').min())
+                max_val = float(pd.to_numeric(series, errors='coerce').max())
+            except Exception:
+                pass
+        stats.append({
+            "column": str(col),
+            "is_numeric": bool(is_num),
+            "unique_count": unique_count,
+            "min": min_val,
+            "max": max_val,
+        })
+
+    return {"filename": str(filename), "stats": stats}
+
+def _format_bin_label(left: float, right: float, is_last: bool) -> str:
+    # Etiquette avec borne gauche incluse, borne droite ouverte sauf le dernier intervalle
+    if is_last:
+        return f"[{_trim_float(left)}–{_trim_float(right)}]"
+    return f"[{_trim_float(left)}–{_trim_float(right)}["
+
+def _trim_float(x: float) -> str:
+    # Supprimer .0 inutiles, limiter à 6 décimales pour propreté
+    try:
+        s = ("%f" % x).rstrip('0').rstrip('.')
+        if s == "-0":
+            s = "0"
+        return s
+    except Exception:
+        return str(x)
+
+async def bin_variable(filename: str, source_column: str, bin_size: float, new_column_name: Optional[str] = None):
+    """
+    Crée une colonne discrétisée (binning) à partir d'une colonne numérique.
+    Intervalles: largeur = bin_size, bornes alignées floor(min/bin)*bin ... ceil(max/bin)*bin
+    Borne gauche incluse, borne droite ouverte, sauf le dernier intervalle qui inclut la borne droite.
+    """
+    if filename not in uploaded_files:
+        return {"error": "Fichier non trouvé. Faites d'abord /excel/preview."}
+
+    if bin_size is None:
+        return {"error": "bin_size est requis"}
+    try:
+        bin_size_val = float(bin_size)
+    except Exception:
+        return {"error": "bin_size invalide"}
+    if bin_size_val <= 0:
+        return {"error": "bin_size doit être > 0"}
+
+    df = uploaded_files[filename]
+    if source_column not in df.columns:
+        return {"error": f"Colonne '{source_column}' introuvable"}
+
+    series = pd.to_numeric(df[source_column], errors='coerce')
+    if not pd.api.types.is_numeric_dtype(series):
+        return {"error": f"La colonne '{source_column}' n'est pas numérique"}
+
+    # Déterminer bornes
+    valid = series.dropna()
+    if valid.empty:
+        return {"error": f"Aucune valeur numérique valide dans '{source_column}'"}
+
+    s_min = float(valid.min())
+    s_max = float(valid.max())
+
+    import math, numpy as np
+    start = math.floor(s_min / bin_size_val) * bin_size_val
+    end = math.ceil(s_max / bin_size_val) * bin_size_val
+    # Ajouter un epsilon à la dernière borne pour inclure le max dans le dernier intervalle
+    eps = np.nextafter(0, 1) * max(1.0, abs(end))
+    edges = np.arange(start, end + bin_size_val + eps, bin_size_val)
+    if edges[-1] < s_max:
+        edges = np.append(edges, end + bin_size_val + eps)
+
+    # Générer labels
+    labels = []
+    for i in range(len(edges) - 1):
+        left = float(edges[i])
+        right = float(edges[i + 1])
+        is_last = (i == len(edges) - 2)
+        labels.append(_format_bin_label(left, right if is_last else right, is_last))
+
+    try:
+        binned = pd.cut(series, bins=edges, right=False, include_lowest=True, labels=labels)
+    except Exception:
+        # fallback: tenter right=True
+        binned = pd.cut(series, bins=edges, right=True, include_lowest=True, labels=labels)
+
+    # Déterminer nom de colonne
+    base_name = new_column_name.strip() if new_column_name else f"{str(source_column)}_bin_{_trim_float(bin_size_val)}"
+    new_name = base_name
+    suffix = 1
+    while new_name in df.columns:
+        new_name = f"{base_name}_{suffix}"
+        suffix += 1
+
+    df[new_name] = binned.astype(str)
+    uploaded_files[filename] = df
+
+    # Retourner résumé
+    unique_bins = sorted([str(x) for x in df[new_name].dropna().unique()])
+    return {
+        "filename": str(filename),
+        "source_column": str(source_column),
+        "new_column": str(new_name),
+        "bin_size": bin_size_val,
+        "min": s_min,
+        "max": s_max,
+        "bins": unique_bins,
+    }
+
 async def select_columns(filename: str, variables_explicatives: List[str], variable_a_expliquer: List[str], selected_data: Dict = None):
     if filename not in uploaded_files:
         return {"error": "Fichier non trouvé. Faites d'abord /excel/preview."}

@@ -50,6 +50,19 @@ async def get_column_values(
 ):
     return await excel_controller.get_column_unique_values(filename, column_name)
 
+@router.post("/column-stats")
+async def column_stats(filename: str = Form(...)):
+    return await excel_controller.get_column_stats(filename)
+
+@router.post("/bin-variable")
+async def bin_variable(
+    filename: str = Form(...),
+    source_column: str = Form(...),
+    bin_size: float = Form(...),
+    new_column_name: Optional[str] = Form(None)
+):
+    return await excel_controller.bin_variable(filename, source_column, bin_size, new_column_name)
+
 @router.post("/build-decision-tree")
 async def build_decision_tree_endpoint(
     filename: str = Form(...),

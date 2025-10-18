@@ -306,17 +306,24 @@ export default function Results() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {analysisResult.variables_explicatives.map(col => (
-                  <div key={col} className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-blue-600 text-sm">🔍</span>
+                {analysisResult.variables_explicatives.map(col => {
+                  let isBinned = false
+                  try {
+                    const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+                    if (Array.isArray(binned)) isBinned = binned.includes(col)
+                  } catch {}
+                  return (
+                    <div key={col} className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-blue-600 text-sm">{isBinned ? '🧱' : '🔍'}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-blue-800">{col}</h4>
+                        <p className="text-sm text-blue-600">{isBinned ? "Variable explicative (à intervalles)" : "Variable explicative"}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-blue-800">{col}</h4>
-                      <p className="text-sm text-blue-600">Variable explicative</p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
@@ -338,15 +345,22 @@ export default function Results() {
               <div className="space-y-3">
                 {Object.entries(selectedRemainingData)
                   .filter(([columnName, values]) => values && values.length > 0)
-                  .map(([columnName, values]) => (
-                    <VariableDisplay
-                      key={columnName}
-                      columnName={columnName}
-                      values={values}
-                      color="purple"
-                      icon="📊"
-                    />
-                  ))}
+                  .map(([columnName, values]) => {
+                    let icon = '📊'
+                    try {
+                      const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+                      if (Array.isArray(binned) && binned.includes(columnName)) icon = '🧱'
+                    } catch {}
+                    return (
+                      <VariableDisplay
+                        key={columnName}
+                        columnName={columnName}
+                        values={values}
+                        color="purple"
+                        icon={icon}
+                      />
+                    )
+                  })}
               </div>
               <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
                 <p className="text-sm text-purple-700">

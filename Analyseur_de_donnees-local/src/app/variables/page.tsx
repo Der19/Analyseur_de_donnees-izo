@@ -1,6 +1,7 @@
 "use client"
 
 import ExcelPreview from "@/components/ui/excel-preview"
+import { API_URL } from "@/lib/api"
 import StepProgress from "@/components/ui/step-progress"
 import { Button } from "@/components/ui/button"
 import { Home } from "lucide-react"
@@ -57,6 +58,34 @@ export default function Var() {
 
       }
     }
+  }, [])
+
+  // Après upload + preview dans ExcelPreview, on stocke le filename/columns/previewData.
+  // Ici, si un fichier est présent dans localStorage, on peut interroger les stats pour savoir
+  // s'il existe des variables numériques avec > 8 uniques et rediriger vers la page de prétraitement.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('excelAnalysisData')
+      if (!stored) return
+      const data = JSON.parse(stored)
+      if (!data.filename) return
+
+      const form = new FormData()
+      form.append('filename', data.filename)
+      fetch(`${API_URL}/excel/column-stats`, { method: 'POST', body: form })
+        .then(r => r.ok ? r.json() : null)
+        .then(res => {
+          if (!res?.stats) return
+          const concerned = res.stats.filter((s: any) => s.is_numeric && s.unique_count > 8)
+          if (concerned.length > 0) {
+            // Marquer qu'on doit passer par la page de prétraitement
+            localStorage.setItem('preprocessColumns', JSON.stringify(concerned))
+            // Rediriger vers la page de discrétisation avant l'étape 2
+            window.location.href = '/preprocess'
+          }
+        })
+        .catch(() => {})
+    } catch {}
   }, [])
 
   const clearStoredData = () => {

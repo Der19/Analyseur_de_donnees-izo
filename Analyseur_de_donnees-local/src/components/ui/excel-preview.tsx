@@ -36,12 +36,14 @@ function DataSelectionAccordion({
   columnName, 
   data, 
   selectedData, 
-  onDataSelection 
+  onDataSelection,
+  isBinned = false
 }: { 
   columnName: string
   data: any[]
   selectedData: any[]
   onDataSelection: (columnName: string, value: any, checked: boolean) => void
+  isBinned?: boolean
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -54,7 +56,9 @@ function DataSelectionAccordion({
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg">📊 {columnName}</CardTitle>
+            <CardTitle className="text-lg">📊 {columnName} {isBinned && (
+              <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 align-middle">intervalles</span>
+            )}</CardTitle>
             <p className="text-sm text-gray-600">
               {selectedData.length > 0 
                 ? `${selectedData.length} valeur(s) sélectionnée(s)` 
@@ -301,6 +305,17 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
 
       const data: PreviewData = await response.json()
 
+      // Marquer les colonnes binned (stockage local depuis la page de prétraitement)
+      try {
+        const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+        if (Array.isArray(binned) && binned.length) {
+          // Réordonner pour afficher les colonnes binned en premier dans les listes
+          const cols = [...data.columns]
+          const binnedSet = new Set(binned)
+          const prioritized = [...cols.filter(c => binnedSet.has(c)), ...cols.filter(c => !binnedSet.has(c))]
+          data.columns = prioritized
+        }
+      } catch {}
       setPreviewData(data)
       
       // Initialiser la sélection des colonnes
@@ -819,8 +834,17 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
             <div className="max-h-64 overflow-y-auto space-y-6 pr-2 min-w-0">
               {/* Section 1: Variables à expliquer */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-950 border-b border-gray-200 pb-2">
+                <h3 className="text-lg font-semibold text-gray-950 border-b border-gray-200 pb-2 flex items-center gap-2">
                   🎯 Variables à expliquer
+                  {(() => {
+                    try {
+                      const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+                      if (Array.isArray(binned) && binned.length) {
+                        return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{binned.length} variable(s) à intervalles</span>
+                      }
+                    } catch {}
+                    return null
+                  })()}
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
                   Cliquez sur une colonne pour la sélectionner et voir ses valeurs uniques
@@ -1035,10 +1059,18 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
           </div>
 
           <div className="max-h-64 overflow-y-auto space-y-4 pr-2">
-              {filteredExplanatoryColumns.map((column, index) => (
+                {filteredExplanatoryColumns.map((column, index) => {
+                  let isBinned = false
+                  try {
+                    const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+                    if (Array.isArray(binned)) isBinned = binned.includes(column)
+                  } catch {}
+                  return (
                 <div key={`explanatory-${index}`} className="flex items-center justify-between p-4 border border-blue-200 rounded-lg hover:bg-blue-50 min-w-0">
                 <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 break-words">{column}</h4>
+                    <h4 className="font-medium text-gray-900 break-words">{column} {isBinned && (
+                      <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 align-middle">intervalles</span>
+                    )}</h4>
                   <p className="text-sm text-gray-500">Colonne {index + 1}</p>
                 </div>
                 
@@ -1057,7 +1089,8 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
                     </label>
                 </div>
               </div>
-            ))}
+                  )
+                })}
           </div>
           </CardContent>
         </Card>
@@ -1094,7 +1127,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
   if (step === 'remaining-data') {
     if (!remainingData) {
       return (
-        <div className="text-center p-8">
+                <div className="text-center p-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p>Chargement des colonnes restantes...</p>
           <Button 
@@ -1169,15 +1202,22 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
             </div>
             
             <div className="max-h-64 overflow-y-auto space-y-4 pr-2">
-              {filteredRemainingColumns.map((columnName) => (
+              {filteredRemainingColumns.map((columnName) => {
+                let isBinned = false
+                try {
+                  const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+                  if (Array.isArray(binned)) isBinned = binned.includes(columnName)
+                } catch {}
+                return (
                 <DataSelectionAccordion
                   key={columnName}
                   columnName={columnName}
                   data={remainingData?.remaining_data[columnName] || []}
                   selectedData={selectedRemainingData[columnName] || []}
                   onDataSelection={handleDataSelection}
+                  isBinned={isBinned}
                 />
-              ))}
+              )})}
           </div>
         </CardContent>
       </Card>
