@@ -317,6 +317,31 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
         }
       } catch {}
       setPreviewData(data)
+
+      // Détection immédiate des variables numériques à forte cardinalité
+      try {
+        // Sauvegarder un minimum pour la page de prétraitement
+        const minimal = {
+          filename: data.filename,
+          rows: data.rows,
+          columns: data.columns
+        }
+        localStorage.setItem('excelAnalysisData', JSON.stringify(minimal))
+
+        const form = new FormData()
+        form.append('filename', data.filename)
+        const statsResp = await fetch(`${API_URL}/excel/column-stats`, { method: 'POST', body: form })
+        if (statsResp.ok) {
+          const stats = await statsResp.json()
+          const concerned = (stats?.stats || []).filter((s: any) => s.is_numeric && s.unique_count > 8)
+          if (concerned.length > 0) {
+            localStorage.setItem('preprocessColumns', JSON.stringify(concerned))
+            // Redirection vers la page de pré-traitement
+            window.location.href = '/preprocess'
+            return
+          }
+        }
+      } catch {}
       
       // Initialiser la sélection des colonnes
       const initialSelection: ColumnSelection = {}
