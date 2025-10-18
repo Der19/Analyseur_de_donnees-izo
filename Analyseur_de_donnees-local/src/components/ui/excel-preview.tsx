@@ -346,7 +346,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
         const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
         if (Array.isArray(binned) && binned.length) {
           // Réordonner pour afficher les colonnes binned en premier dans les listes
-          const cols = [...data.columns]
+          const cols = Array.from(new Set([...(data.columns || []), ...binned]))
           const binnedSet = new Set(binned)
           const prioritized = [...cols.filter(c => binnedSet.has(c)), ...cols.filter(c => !binnedSet.has(c))]
           data.columns = prioritized

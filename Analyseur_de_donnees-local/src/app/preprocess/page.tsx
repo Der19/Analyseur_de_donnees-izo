@@ -90,8 +90,23 @@ export default function PreprocessPage() {
           const existing = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
           const merged = Array.from(new Set([...(Array.isArray(existing) ? existing : []), ...created]))
           localStorage.setItem('binnedColumns', JSON.stringify(merged))
+          // Mettre à jour la liste des colonnes connue côté client pour l'écran suivant
+          const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
+          if (existingEA && Array.isArray(existingEA.columns)) {
+            const updatedCols = Array.from(new Set([...(existingEA.columns || []), ...created]))
+            existingEA.columns = updatedCols
+            localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
+          }
         } catch {
           localStorage.setItem('binnedColumns', JSON.stringify(created))
+          try {
+            const existingEA = JSON.parse(localStorage.getItem('excelAnalysisData') || '{}')
+            if (existingEA && Array.isArray(existingEA.columns)) {
+              const updatedCols = Array.from(new Set([...(existingEA.columns || []), ...created]))
+              existingEA.columns = updatedCols
+              localStorage.setItem('excelAnalysisData', JSON.stringify(existingEA))
+            }
+          } catch {}
         }
       }
       router.push('/variables')
