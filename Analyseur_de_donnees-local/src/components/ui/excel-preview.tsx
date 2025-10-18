@@ -5,6 +5,7 @@ import { useFile } from "@/app/context/FileContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
+import { API_URL } from "@/lib/api"
 import { ChevronDown, ChevronRight, Home } from "lucide-react"
 
 interface PreviewData {
@@ -186,7 +187,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
       const formData = new FormData()
       formData.append("filename", filename)
       formData.append("column_name", columnName)
-      const response = await fetch("http://localhost:8000/excel/get-column-values", {
+      const response = await fetch(`${API_URL}/excel/get-column-values`, {
         method: "POST",
         body: formData,
       })
@@ -263,7 +264,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
 
   const checkServerStatus = async () => {
     try {
-      const response = await fetch("http://localhost:8000/health", {
+      const response = await fetch(`${API_URL}/health`, {
         method: "GET",
         signal: AbortSignal.timeout(5000) // Timeout de 5 secondes
       })
@@ -288,7 +289,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("http://localhost:8000/excel/preview", {
+      const response = await fetch(`${API_URL}/excel/preview`, {
         method: "POST",
         body: formData,
       })
@@ -587,7 +588,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
 
 
 
-      const response = await fetch("http://localhost:8000/excel/select-columns", {
+      const response = await fetch(`${API_URL}/excel/select-columns`, {
         method: "POST",
         body: formData,
       })
@@ -626,7 +627,7 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
 
 
 
-        const response = await fetch("http://localhost:8000/excel/select-columns", {
+        const response = await fetch(`${API_URL}/excel/select-columns`, {
           method: "POST",
           body: formData,
         })
