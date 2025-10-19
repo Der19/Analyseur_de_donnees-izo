@@ -900,19 +900,8 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
             <div className="max-h-64 overflow-y-auto space-y-6 pr-2 min-w-0">
               {/* Section 1: Variables à expliquer */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-950 border-b border-gray-200 pb-2 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-950 border-b border-gray-200 pb-2">
                   🎯 Variables à expliquer
-                  {(() => {
-                    try {
-                      const key = previewData?.filename ? `binnedColumns:${previewData.filename}` : 'binnedColumns'
-                      const binned = JSON.parse(localStorage.getItem(key) || '[]')
-                      if (Array.isArray(binned) && binned.length) {
-                        // Afficher le nombre total de variables créées à intervalles (colonnes binned)
-                        return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{binned.length} variable(s) à intervalles</span>
-                      }
-                    } catch {}
-                    return null
-                  })()}
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
                   Cliquez sur une colonne pour la sélectionner et voir ses valeurs uniques
