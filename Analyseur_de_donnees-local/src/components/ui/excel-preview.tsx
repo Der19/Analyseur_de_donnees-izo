@@ -904,15 +904,11 @@ export default function ExcelPreview({ onStepChange }: ExcelPreviewProps) {
                   🎯 Variables à expliquer
                   {(() => {
                     try {
-                      const binned = JSON.parse(localStorage.getItem('binnedColumns') || '[]')
+                      const key = previewData?.filename ? `binnedColumns:${previewData.filename}` : 'binnedColumns'
+                      const binned = JSON.parse(localStorage.getItem(key) || '[]')
                       if (Array.isArray(binned) && binned.length) {
-                        // Afficher le nombre de variables sources distinctes (avant le suffixe _bin)
-                        const sources = new Set<string>()
-                        for (const col of binned) {
-                          const idx = col.indexOf('_bin')
-                          sources.add(idx > 0 ? col.substring(0, idx) : col)
-                        }
-                        return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{sources.size} variable(s) à intervalles</span>
+                        // Afficher le nombre total de variables créées à intervalles (colonnes binned)
+                        return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{binned.length} variable(s) à intervalles</span>
                       }
                     } catch {}
                     return null
